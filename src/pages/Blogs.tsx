@@ -1,27 +1,42 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import BlogGrid from "@/components/blog/BlogGrid";
-import { mockBlogs } from "@/lib/mock-data";
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { BlogPost } from "@/types/blog";
+import { fetchAllBlogs, fetchBlogsByTag } from "@/lib/supabase-blogs";
+import { toast } from "@/components/ui/use-toast";
 
 const Blogs = () => {
   const [searchParams] = useSearchParams();
-  const [blogs, setBlogs] = useState<BlogPost[]>(mockBlogs);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const tagFilter = searchParams.get('tag');
   
   useEffect(() => {
-    // If tag parameter is provided, filter blogs
-    if (tagFilter) {
-      const filtered = mockBlogs.filter(blog => 
-        blog.tags.includes(tagFilter)
-      );
-      setBlogs(filtered);
-    } else {
-      setBlogs(mockBlogs);
-    }
+    const fetchBlogs = async () => {
+      setLoading(true);
+      try {
+        let data;
+        if (tagFilter) {
+          data = await fetchBlogsByTag(tagFilter);
+        } else {
+          data = await fetchAllBlogs();
+        }
+        setBlogs(data);
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load blog posts. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchBlogs();
   }, [tagFilter]);
   
   return (
@@ -40,7 +55,13 @@ const Blogs = () => {
             </p>
           </div>
           
-          <BlogGrid blogs={blogs} />
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            </div>
+          ) : (
+            <BlogGrid blogs={blogs} />
+          )}
         </div>
       </section>
     </MainLayout>

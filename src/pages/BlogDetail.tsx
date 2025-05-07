@@ -1,15 +1,16 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import BlogCard from "@/components/blog/BlogCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, ClockIcon, ArrowLeft, Share2Icon } from "lucide-react";
-import { mockBlogs } from "@/lib/mock-data";
 import { formatDate } from "@/lib/utils";
 import { BlogPost } from "@/types/blog";
+import { fetchBlogById, fetchAllBlogs } from "@/lib/supabase-blogs";
+import { toast } from "@/components/ui/use-toast";
 import NotFound from "./NotFound";
 
 // For rendering markdown
@@ -17,27 +18,49 @@ import ReactMarkdown from "react-markdown";
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [relatedBlogs, setRelatedBlogs] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Find the blog with the matching ID
-    const foundBlog = mockBlogs.find(b => b.id === id);
-    
-    if (foundBlog) {
-      setBlog(foundBlog);
+    const fetchBlogData = async () => {
+      setIsLoading(true);
+      setError(null);
       
-      // Find related blogs based on shared tags
-      const related = mockBlogs
-        .filter(b => b.id !== id && b.tags.some(tag => foundBlog.tags.includes(tag)))
-        .slice(0, 3);
-      
-      setRelatedBlogs(related);
-    }
+      try {
+        // Guard against undefined ID
+        if (!id) {
+          navigate('/blogs');
+          return;
+        }
+        
+        const blogData = await fetchBlogById(id);
+        setBlog(blogData);
+        
+        // Fetch related blogs
+        const allBlogs = await fetchAllBlogs();
+        const related = allBlogs
+          .filter(b => b.id !== id && b.tags.some(tag => blogData.tags.includes(tag)))
+          .slice(0, 3);
+        
+        setRelatedBlogs(related);
+      } catch (err) {
+        console.error("Error fetching blog:", err);
+        setError("Failed to load blog post");
+        toast({
+          title: "Error",
+          description: "Failed to load blog post. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    setIsLoading(false);
-  }, [id]);
+    fetchBlogData();
+  }, [id, navigate]);
   
   if (isLoading) {
     return (
@@ -50,7 +73,7 @@ const BlogDetail = () => {
     );
   }
   
-  if (!blog) {
+  if (error || !blog) {
     return <NotFound />;
   }
   
@@ -64,7 +87,10 @@ const BlogDetail = () => {
     } else {
       // Fallback: copy URL to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      toast({
+        title: "Link copied",
+        description: "Link has been copied to clipboard!",
+      });
     }
   };
   
