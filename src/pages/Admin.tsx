@@ -9,11 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Plus, Pencil, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { X, Plus, Pencil, Trash2, AlertTriangle, Loader2, LogOut } from "lucide-react";
+import ImageUploader from "@/components/blog/ImageUploader";
 import { BlogFormData, BlogPost } from "@/types/blog";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
+import { signOut } from "@/lib/supabase-auth";
 import { 
   fetchAllBlogs, 
   createBlog, 
@@ -22,11 +26,14 @@ import {
 } from "@/lib/supabase-blogs";
 
 const Admin = () => {
+  const navigate = useNavigate();
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("posts");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
   const [newBlog, setNewBlog] = useState<BlogFormData>({
     title: "",
     excerpt: "",
@@ -71,6 +78,11 @@ const Admin = () => {
     setNewBlog(prev => ({ ...prev, featured: checked }));
   };
 
+  // Handle image upload
+  const handleImageUploaded = (url: string) => {
+    setNewBlog(prev => ({ ...prev, coverImage: url }));
+  };
+
   // Add a tag to the blog
   const handleAddTag = () => {
     if (currentTag.trim() && !newBlog.tags.includes(currentTag.trim())) {
@@ -106,11 +118,22 @@ const Admin = () => {
     setActiveTab("create");
   };
 
+  // Show delete confirmation
+  const handleShowDeleteConfirm = (id: string) => {
+    setBlogToDelete(id);
+    setShowConfirmDialog(true);
+  };
+
   // Delete a blog
-  const handleDeleteBlog = async (id: string) => {
+  const handleConfirmDelete = async () => {
+    if (!blogToDelete) return;
+    
     try {
-      await deleteBlog(id);
-      setBlogs(prev => prev.filter(blog => blog.id !== id));
+      await deleteBlog(blogToDelete);
+      setBlogs(prev => prev.filter(blog => blog.id !== blogToDelete));
+      setShowConfirmDialog(false);
+      setBlogToDelete(null);
+      
       toast({
         title: "Blog deleted",
         description: "The blog post has been successfully deleted.",
@@ -125,9 +148,27 @@ const Admin = () => {
     }
   };
 
+  // Sign out handler
+  const handleSignOut = async () => {
+    const success = await signOut();
+    if (success) {
+      navigate("/auth");
+    }
+  };
+
   // Submit the form to create/update a blog
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!newBlog.coverImage) {
+      toast({
+        title: "Image required",
+        description: "Please upload a cover image for the blog post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSaving(true);
     
     try {
@@ -182,7 +223,13 @@ const Admin = () => {
   return (
     <MainLayout>
       <div className="container py-12">
-        <h1 className="text-3xl font-bold mb-8">Blog Management</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Blog Management</h1>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
 
         <Alert className="mb-8">
           <AlertTriangle className="h-4 w-4" />
@@ -264,7 +311,7 @@ const Admin = () => {
                             <Button 
                               size="sm" 
                               variant="destructive"
-                              onClick={() => handleDeleteBlog(blog.id)}
+                              onClick={() => handleShowDeleteConfirm(blog.id)}
                             >
                               <Trash2 size={16} className="mr-1" />
                               Delete
@@ -291,122 +338,127 @@ const Admin = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        name="title"
-                        placeholder="Enter blog title"
-                        value={newBlog.title}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="excerpt">Excerpt</Label>
-                      <Textarea
-                        id="excerpt"
-                        name="excerpt"
-                        placeholder="Brief description of your blog"
-                        value={newBlog.excerpt}
-                        onChange={handleInputChange}
-                        required
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="content">Content (Markdown)</Label>
-                      <Textarea
-                        id="content"
-                        name="content"
-                        placeholder="Write your blog content in markdown format"
-                        value={newBlog.content}
-                        onChange={handleInputChange}
-                        required
-                        rows={10}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="coverImage">Cover Image URL</Label>
-                      <Input
-                        id="coverImage"
-                        name="coverImage"
-                        placeholder="Enter image URL"
-                        value={newBlog.coverImage}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="authorName">Author Name</Label>
-                      <Input
-                        id="authorName"
-                        name="authorName"
-                        placeholder="Enter author name"
-                        value={newBlog.authorName}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="authorAvatar">Author Avatar URL (optional)</Label>
-                      <Input
-                        id="authorAvatar"
-                        name="authorAvatar"
-                        placeholder="Enter author avatar URL"
-                        value={newBlog.authorAvatar || ""}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label>Tags</Label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {newBlog.tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary">
-                            {tag}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveTag(tag)}
-                              className="ml-1 text-muted-foreground hover:text-foreground"
-                            >
-                              <X size={14} />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    <div className="space-y-6 order-2 md:order-1">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Title</Label>
                         <Input
-                          placeholder="Add a tag"
-                          value={currentTag}
-                          onChange={(e) => setCurrentTag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddTag();
-                            }
-                          }}
+                          id="title"
+                          name="title"
+                          placeholder="Enter blog title"
+                          value={newBlog.title}
+                          onChange={handleInputChange}
+                          required
                         />
-                        <Button type="button" onClick={handleAddTag} size="sm">
-                          <Plus size={16} className="mr-1" />
-                          Add
-                        </Button>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="excerpt">Excerpt</Label>
+                        <Textarea
+                          id="excerpt"
+                          name="excerpt"
+                          placeholder="Brief description of your blog"
+                          value={newBlog.excerpt}
+                          onChange={handleInputChange}
+                          required
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="content">Content (Markdown)</Label>
+                        <Textarea
+                          id="content"
+                          name="content"
+                          placeholder="Write your blog content in markdown format"
+                          value={newBlog.content}
+                          onChange={handleInputChange}
+                          required
+                          rows={10}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="authorName">Author Name</Label>
+                        <Input
+                          id="authorName"
+                          name="authorName"
+                          placeholder="Enter author name"
+                          value={newBlog.authorName}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="authorAvatar">Author Avatar URL (optional)</Label>
+                        <Input
+                          id="authorAvatar"
+                          name="authorAvatar"
+                          placeholder="Enter author avatar URL"
+                          value={newBlog.authorAvatar || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Tags</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {newBlog.tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary">
+                              {tag}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTag(tag)}
+                                className="ml-1 text-muted-foreground hover:text-foreground"
+                              >
+                                <X size={14} />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add a tag"
+                            value={currentTag}
+                            onChange={(e) => setCurrentTag(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddTag();
+                              }
+                            }}
+                          />
+                          <Button type="button" onClick={handleAddTag} size="sm">
+                            <Plus size={16} className="mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="featured"
+                          checked={newBlog.featured}
+                          onCheckedChange={handleFeaturedToggle}
+                        />
+                        <Label htmlFor="featured">Featured Post</Label>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        id="featured"
-                        checked={newBlog.featured}
-                        onCheckedChange={handleFeaturedToggle}
-                      />
-                      <Label htmlFor="featured">Featured Post</Label>
+                    
+                    <div className="order-1 md:order-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="coverImage">Cover Image</Label>
+                        <ImageUploader
+                          onImageUploaded={handleImageUploaded}
+                          currentImage={newBlog.coverImage}
+                        />
+                        {!newBlog.coverImage && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            A cover image is required
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -442,6 +494,32 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this blog post? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };

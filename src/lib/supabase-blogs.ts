@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogFormData } from "@/types/blog";
+import { deleteImage } from "./supabase-storage";
 
 // Fetch all blogs from Supabase
 export async function fetchAllBlogs() {
@@ -132,6 +133,14 @@ export async function updateBlog(id: string, blog: BlogFormData) {
 
 // Delete a blog
 export async function deleteBlog(id: string) {
+  // First get the blog to access its cover image
+  const { data: blog } = await supabase
+    .from('blogs')
+    .select('cover_image')
+    .eq('id', id)
+    .single();
+    
+  // Delete the blog from the database
   const { error } = await supabase
     .from('blogs')
     .delete()
@@ -140,6 +149,11 @@ export async function deleteBlog(id: string) {
   if (error) {
     console.error('Error deleting blog:', error);
     throw error;
+  }
+  
+  // If image was uploaded to Supabase Storage, try to delete it
+  if (blog?.cover_image && blog.cover_image.includes('blog_images')) {
+    await deleteImage(blog.cover_image);
   }
 
   return true;
