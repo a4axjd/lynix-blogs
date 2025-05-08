@@ -198,7 +198,7 @@ serve(async (req) => {
     const emailPromises = subscribers.map(async (subscriber) => {
       try {
         const data = await resend.emails.send({
-          from: "Blog Newsletter <newsletter@resend.dev>",
+          from: "Blog Newsletter <newsletter@blogs.lynixdevs.us>",
           to: [subscriber.email],
           subject: subject,
           html: html,
