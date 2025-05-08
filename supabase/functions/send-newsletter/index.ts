@@ -29,7 +29,7 @@ interface Subscriber {
 
 // Utility function to generate email content
 const generateEmailContent = (blog: BlogPost) => {
-  const blogUrl = `https://blogs.lynixdevs.us/blog/${blog.slug}`;
+  const blogUrl = `https://blogs.lynixdevs.us/blog/${blog.id}`;
   
   return {
     subject: `New Post: ${blog.title}`,
