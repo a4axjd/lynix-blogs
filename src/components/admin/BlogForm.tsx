@@ -1,16 +1,29 @@
 
-// Add a checkbox for sending newsletters when creating or updating a blog post
+import React from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
-// Somewhere in your form component, add:
-// <div className="flex items-center space-x-2 mt-2">
-//   <Checkbox 
-//     id="send-newsletter" 
-//     checked={formData.sendNewsletter || false}
-//     onCheckedChange={(checked) => setFormData({...formData, sendNewsletter: !!checked})}
-//   />
-//   <label 
-//     htmlFor="send-newsletter" 
-//     className="text-sm cursor-pointer">
-//     Send newsletter to subscribers
-//   </label>
-// </div>
+interface BlogFormCheckboxProps {
+  id: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  label: string;
+}
+
+const BlogFormCheckbox = ({ id, checked, onCheckedChange, label }: BlogFormCheckboxProps) => {
+  return (
+    <div className="flex items-center space-x-2 mt-2">
+      <Checkbox 
+        id={id} 
+        checked={checked}
+        onCheckedChange={(checked) => onCheckedChange(!!checked)}
+      />
+      <label 
+        htmlFor={id} 
+        className="text-sm cursor-pointer">
+        {label}
+      </label>
+    </div>
+  );
+};
+
+export default BlogFormCheckbox;

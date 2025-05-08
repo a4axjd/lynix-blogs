@@ -23,7 +23,8 @@ import {
   updateBlog, 
   deleteBlog 
 } from "@/lib/supabase-blogs";
-import NewsletterManagement from "@/components/admin/NewsletterManagement"; // Add import for NewsletterManagement
+import NewsletterManagement from "@/components/admin/NewsletterManagement";
+import BlogFormCheckbox from "@/components/admin/BlogForm";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -41,7 +42,8 @@ const Admin = () => {
     coverImage: "",
     authorName: "",
     tags: [],
-    featured: false
+    featured: false,
+    sendNewsletter: false
   });
   const [currentTag, setCurrentTag] = useState("");
 
@@ -76,6 +78,11 @@ const Admin = () => {
   // Handle featured toggle
   const handleFeaturedToggle = (checked: boolean) => {
     setNewBlog(prev => ({ ...prev, featured: checked }));
+  };
+
+  // Handle newsletter toggle
+  const handleNewsletterToggle = (checked: boolean) => {
+    setNewBlog(prev => ({ ...prev, sendNewsletter: checked }));
   };
 
   // Handle image upload
@@ -113,7 +120,8 @@ const Admin = () => {
       authorName: blog.authorName,
       authorAvatar: blog.authorAvatar,
       tags: [...blog.tags],
-      featured: blog.featured || false
+      featured: blog.featured || false,
+      sendNewsletter: blog.sendNewsletter || false
     });
     setActiveTab("create");
   };
@@ -204,7 +212,8 @@ const Admin = () => {
         coverImage: "",
         authorName: "",
         tags: [],
-        featured: false
+        featured: false,
+        sendNewsletter: false
       });
       setEditingBlogId(null);
       setActiveTab("posts");
@@ -243,6 +252,7 @@ const Admin = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="posts">All Posts</TabsTrigger>
             <TabsTrigger value="create">{editingBlogId ? "Edit Post" : "Create Post"}</TabsTrigger>
+            <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts">
@@ -436,13 +446,22 @@ const Admin = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          id="featured"
-                          checked={newBlog.featured}
-                          onCheckedChange={handleFeaturedToggle}
+                      <div className="flex flex-col space-y-4">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            id="featured"
+                            checked={newBlog.featured}
+                            onCheckedChange={handleFeaturedToggle}
+                          />
+                          <Label htmlFor="featured">Featured Post</Label>
+                        </div>
+
+                        <BlogFormCheckbox
+                          id="send-newsletter"
+                          checked={newBlog.sendNewsletter || false}
+                          onCheckedChange={handleNewsletterToggle}
+                          label="Send newsletter to subscribers"
                         />
-                        <Label htmlFor="featured">Featured Post</Label>
                       </div>
                     </div>
                     
@@ -476,7 +495,8 @@ const Admin = () => {
                           coverImage: "",
                           authorName: "",
                           tags: [],
-                          featured: false
+                          featured: false,
+                          sendNewsletter: false
                         });
                       }}
                       className="mr-2"
@@ -492,37 +512,38 @@ const Admin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="newsletter">
+            <NewsletterManagement />
+          </TabsContent>
         </Tabs>
 
-        {/* Add NewsletterManagement component here */}
-        <NewsletterManagement />
+        {/* Delete confirmation dialog */}
+        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this blog post? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowConfirmDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Delete confirmation dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this blog post? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfirmDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </MainLayout>
   );
 };
