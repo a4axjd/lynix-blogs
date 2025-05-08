@@ -1,3 +1,4 @@
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -12,6 +13,7 @@ export interface BlogPost {
   tags: string[];
   readTime: number;
   featured: boolean;
+  sendNewsletter?: boolean;
 }
 
 export interface BlogFormData {

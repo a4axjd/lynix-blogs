@@ -3,3 +3,9 @@ project_id = "qrcjxzktczmcnvcyuush"
 
 [functions.send-newsletter]
 verify_jwt = true
+
+[functions.verify-subscriber]
+verify_jwt = false
+
+[functions.send-confirmation]
+verify_jwt = false

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogFormData } from "@/types/blog";
 import { deleteImage } from "./supabase-storage";
@@ -124,6 +125,21 @@ export async function sendNewsletter(blogId: string) {
   }
 }
 
+// Subscribe to the newsletter
+export async function subscribeToNewsletter(email: string) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-confirmation', {
+      body: { email },
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error subscribing to newsletter:', error);
+    throw error;
+  }
+}
+
 // Fetch newsletter logs
 export async function fetchNewsletterLogs() {
   const { data, error } = await supabase
@@ -181,6 +197,16 @@ export async function updateBlog(id: string, blog: BlogFormData) {
     console.error('Error updating blog:', error);
     throw error;
   }
+  
+  // Send newsletter if the blog is featured and sendNewsletter is selected
+  if (blog.featured && blog.sendNewsletter) {
+    try {
+      await sendNewsletter(data.id);
+    } catch (err) {
+      console.error("Error sending newsletter:", err);
+      // Continue despite newsletter error
+    }
+  }
 
   return transformSupabaseBlog(data);
 }
@@ -228,6 +254,7 @@ function transformSupabaseBlog(blog: any): BlogPost {
     updatedAt: blog.updated_at,
     tags: blog.tags || [],
     readTime: blog.read_time,
-    featured: blog.featured
+    featured: blog.featured,
+    sendNewsletter: false // This is only used in the form, not stored in the database
   };
 }
