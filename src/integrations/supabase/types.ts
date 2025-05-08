@@ -57,6 +57,62 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_logs: {
+        Row: {
+          blog_id: string | null
+          id: string
+          recipients_count: number
+          sent_at: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          blog_id?: string | null
+          id?: string
+          recipients_count?: number
+          sent_at?: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          blog_id?: string | null
+          id?: string
+          recipients_count?: number
+          sent_at?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_logs_blog_id_fkey"
+            columns: ["blog_id"]
+            isOneToOne: false
+            referencedRelation: "blogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +23,7 @@ import {
   updateBlog, 
   deleteBlog 
 } from "@/lib/supabase-blogs";
+import NewsletterManagement from "@/components/admin/NewsletterManagement"; // Add import for NewsletterManagement
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -493,6 +493,9 @@ const Admin = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Add NewsletterManagement component here */}
+        <NewsletterManagement />
       </div>
 
       {/* Delete confirmation dialog */}

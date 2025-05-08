@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BlogPost, BlogFormData } from "@/types/blog";
 import { deleteImage } from "./supabase-storage";
@@ -97,7 +96,62 @@ export async function createBlog(blog: BlogFormData) {
     throw error;
   }
 
+  // Send newsletter if the blog is featured
+  if (blog.featured && blog.sendNewsletter) {
+    try {
+      await sendNewsletter(data.id);
+    } catch (err) {
+      console.error("Error sending newsletter:", err);
+      // Continue despite newsletter error
+    }
+  }
+
   return transformSupabaseBlog(data);
+}
+
+// Send newsletter about a blog post
+export async function sendNewsletter(blogId: string) {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-newsletter', {
+      body: { blogId },
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error sending newsletter:', error);
+    throw error;
+  }
+}
+
+// Fetch newsletter logs
+export async function fetchNewsletterLogs() {
+  const { data, error } = await supabase
+    .from('newsletter_logs')
+    .select('*, blogs(title)')
+    .order('sent_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching newsletter logs:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+// Fetch newsletter subscribers
+export async function fetchNewsletterSubscribers() {
+  const { data, error } = await supabase
+    .from('newsletter_subscribers')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching subscribers:', error);
+    throw error;
+  }
+
+  return data;
 }
 
 // Update an existing blog

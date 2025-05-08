@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import HeroPost from "@/components/blog/HeroPost";
@@ -9,6 +8,7 @@ import { fetchFeaturedBlogs, fetchAllBlogs } from "@/lib/supabase-blogs";
 import { BlogPost } from "@/types/blog";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import NewsletterForm from "@/components/newsletter/NewsletterForm";
 
 const Index = () => {
   const [heroPost, setHeroPost] = useState<BlogPost | null>(null);
@@ -160,15 +160,7 @@ const Index = () => {
               Get the latest tech stories and tutorials delivered straight to your inbox
             </p>
             
-            <form className="flex flex-col sm:flex-row gap-2">
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="flex-grow px-4 py-2 rounded-md border border-border bg-background"
-                required
-              />
-              <Button type="submit">Subscribe</Button>
-            </form>
+            <NewsletterForm className="max-w-md mx-auto" />
           </div>
         </div>
       </section>

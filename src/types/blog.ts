@@ -1,4 +1,3 @@
-
 export interface BlogPost {
   id: string;
   title: string;
@@ -12,7 +11,7 @@ export interface BlogPost {
   updatedAt: string;
   tags: string[];
   readTime: number;
-  featured?: boolean;
+  featured: boolean;
 }
 
 export interface BlogFormData {
@@ -24,4 +23,24 @@ export interface BlogFormData {
   authorAvatar?: string;
   tags: string[];
   featured: boolean;
+  sendNewsletter?: boolean;
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  created_at: string;
+  confirmed: boolean;
+}
+
+export interface NewsletterLog {
+  id: string;
+  blog_id: string;
+  sent_at: string;
+  recipients_count: number;
+  subject: string;
+  status: string;
+  blogs: {
+    title: string;
+  };
 }
