@@ -95,7 +95,7 @@ serve(async (req) => {
     
     // Send confirmation email
     const { data: emailResult, error: emailError } = await resend.emails.send({
-      from: "Blog Newsletter <newsletter@resend.dev>",
+      from: "Blog Newsletter <newsletter@blogs.lynixdevs.us>",
       to: [email],
       subject: "Confirm your newsletter subscription",
       html: `
