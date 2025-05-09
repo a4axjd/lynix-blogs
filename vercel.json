@@ -1,5 +1,7 @@
+
 {
   "rewrites": [
+    { "source": "/api/verify-subscriber", "destination": "https://qrcjxzktczmcnvcyuush.functions.supabase.co/verify-subscriber" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

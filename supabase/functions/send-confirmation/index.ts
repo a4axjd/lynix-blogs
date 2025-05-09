@@ -90,8 +90,9 @@ serve(async (req) => {
       subscriberId = newSubscriber.id;
     }
     
-    // Generate verification link
-    const verificationUrl = `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/api/verify-subscriber?token=${subscriberId}`;
+    // Generate verification link with production domain
+    const productionBaseUrl = "https://blogs.lynixdevs.us";
+    const verificationUrl = `${productionBaseUrl}/api/verify-subscriber?token=${subscriberId}`;
     
     // Send confirmation email
     const { data: emailResult, error: emailError } = await resend.emails.send({
