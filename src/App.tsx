@@ -10,6 +10,8 @@ import BlogDetail from "./pages/BlogDetail";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import SubscriptionConfirmed from "./pages/subscription/SubscriptionConfirmed";
+import SubscriptionError from "./pages/subscription/SubscriptionError";
 import { useEffect, useState } from "react";
 import { getCurrentUser, AuthUser } from "./lib/supabase-auth";
 import { supabase } from "./integrations/supabase/client";
@@ -75,6 +77,8 @@ const App = () => {
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/subscription/confirmed" element={<SubscriptionConfirmed />} />
+            <Route path="/subscription/error" element={<SubscriptionError />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <Admin />
